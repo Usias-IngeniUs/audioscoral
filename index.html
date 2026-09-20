@@ -138,17 +138,14 @@
     <div id="message" class="message">Preparando tu recuerdo...</div>
 
     <div id="playerWrap" class="custom-player hidden">
-      <!-- Elemento de audio nativo -->
       <audio id="audioElement" preload="metadata"></audio>
 
-      <!-- Botón de Play/Pausa estilizado -->
       <button id="playBtn" class="play-btn" aria-label="Reproducir">
         <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       </button>
 
       <div class="hint" id="statusHint">Toca ▶ para escuchar</div>
 
-      <!-- Barra de progreso -->
       <div class="progress-container">
         <span id="currentTime" class="time-text">0:00</span>
         <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100">
@@ -168,7 +165,7 @@
     (function(){
       const params = new URLSearchParams(window.location.search);
       const id = (params.get("id") || "").trim();
-      
+
       const message = document.getElementById("message");
       const playerWrap = document.getElementById("playerWrap");
       const audio = document.getElementById("audioElement");
@@ -179,22 +176,20 @@
       const currentTimeEl = document.getElementById("currentTime");
       const durationTimeEl = document.getElementById("durationTime");
 
-      // Íconos SVG para reproducir y pausar
       const playSVG = '<path d="M8 5v14l11-7z"/>';
       const pauseSVG = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
 
-      if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) {
+      if (!id) {
         message.textContent = "Audio no especificado.";
         return;
       }
 
-      // Enlace de transmisión directa de Google Drive
-      audio.src = "https://lh3.googleusercontent.com/d/" + encodeURIComponent(id);
-      
+      // RUTA LOCAL EN GITHUB: Busca dentro de la carpeta 'audios' el archivo .mp3
+      audio.src = "./audios/" + encodeURIComponent(id) + ".mp3";
+
       message.classList.add("hidden");
       playerWrap.classList.remove("hidden");
 
-      // Función para dar formato mm:ss
       function formatTime(secs) {
         if (isNaN(secs)) return "0:00";
         const m = Math.floor(secs / 60);
@@ -202,12 +197,10 @@
         return `${m}:${s < 10 ? '0' : ''}${s}`;
       }
 
-      // Cargar duración al procesar metadatos
       audio.addEventListener("loadedmetadata", () => {
         durationTimeEl.textContent = formatTime(audio.duration);
       });
 
-      // Control de reproducción / pausa
       playBtn.addEventListener("click", () => {
         if (audio.paused) {
           audio.play().then(() => {
@@ -216,7 +209,7 @@
             statusHint.textContent = "Reproduciendo";
           }).catch(err => {
             console.error("Error reproduciendo audio:", err);
-            statusHint.textContent = "Haz clic de nuevo para escuchar";
+            statusHint.textContent = "No se pudo cargar el archivo";
           });
         } else {
           audio.pause();
@@ -226,7 +219,6 @@
         }
       });
 
-      // Actualizar la barra de progreso
       audio.addEventListener("timeupdate", () => {
         if (!isNaN(audio.duration)) {
           const progress = (audio.currentTime / audio.duration) * 100;
@@ -235,15 +227,12 @@
         }
       });
 
-      // Adelantar/atrasar con la barra
       progressBar.addEventListener("input", () => {
         if (!isNaN(audio.duration)) {
-          const seekTime = (progressBar.value / 100) * audio.duration;
-          audio.currentTime = seekTime;
+          audio.currentTime = (progressBar.value / 100) * audio.duration;
         }
       });
 
-      // Estado al finalizar la pista
       audio.addEventListener("ended", () => {
         playIcon.innerHTML = playSVG;
         playBtn.classList.remove("playing");
